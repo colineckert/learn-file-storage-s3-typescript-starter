@@ -7,6 +7,7 @@ import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
 import path from "path";
 
 const MAX_UPLOAD_SIZE = 10 << 20; // 10 MB
+const supportedMediaTypes = ["image/jpeg", "image/png"];
 
 export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const { videoId } = req.params as { videoId?: string };
@@ -41,8 +42,11 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
     throw new BadRequestError("Thumbnail file is too large");
   }
 
-  const mediaType = file.type;
-  const filePath = path.join(cfg.assetsRoot, `/${video.id}.${mediaType}`);
+  if (!supportedMediaTypes.includes(file.type)) {
+    throw new BadRequestError("Unsupported file type for video thumbnail");
+  }
+
+  const filePath = path.join(cfg.assetsRoot, `/${video.id}.${file.type}`);
   const thumbnailURL = `http://localhost:${cfg.port}/${filePath}`;
   Bun.write(filePath, file);
 
