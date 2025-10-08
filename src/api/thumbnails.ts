@@ -5,6 +5,7 @@ import type { ApiConfig } from "../config";
 import type { BunRequest } from "bun";
 import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
 import path from "path";
+import { randomBytes } from "crypto";
 
 const MAX_UPLOAD_SIZE = 10 << 20; // 10 MB
 const supportedMediaTypes = ["image/jpeg", "image/png"];
@@ -46,7 +47,9 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
     throw new BadRequestError("Unsupported file type for video thumbnail");
   }
 
-  const filePath = path.join(cfg.assetsRoot, `/${video.id}.${file.type}`);
+  const fileName = randomBytes(32).toString("base64url");
+  const extension = file.type.split("/")[1];
+  const filePath = path.join(cfg.assetsRoot, `/${fileName}.${extension}`);
   const thumbnailURL = `http://localhost:${cfg.port}/${filePath}`;
   Bun.write(filePath, file);
 
